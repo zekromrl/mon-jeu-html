@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jeu de Tir 2D</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+    canvas {
+      border: 1px solid #000;
+      background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Variables du joueur
+    const player = {
+      x: canvas.width / 2 - 25,
+      y: canvas.height - 60,
+      width: 50,
+      height: 50,
+      speed: 5,
+      dx: 0
+    };
+
+    // Variables des projectiles
+    const bullets = [];
+    const bulletSpeed = 5;
+
+    // Variables des ennemis
+    const enemies = [];
+    const enemySpeed = 2;
+
+    // Gestion des touches
+    const keys = {
+      ArrowLeft: false,
+      ArrowRight: false,
+      Space: false
+    };
+
+    // Écouter les événements de clavier
+    document.addEventListener('keydown', (e) => {
+      if (e.key in keys) {
+        keys[e.key] = true;
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      if (e.key in keys) {
+        keys[e.key] = false;
+      }
+    });
+
+    // Créer des ennemis
+    function createEnemy() {
+      const enemy = {
+        x: Math.random() * (canvas.width - 50),
+        y: -50,
+        width: 50,
+        height: 50,
+        speed: enemySpeed
+      };
+      enemies.push(enemy);
+    }
+
+    // Mouvements du joueur
+    function movePlayer() {
+      if (keys.ArrowLeft && player.x > 0) {
+        player.dx = -player.speed;
+      } else if (keys.ArrowRight && player.x < canvas.width - player.width) {
+        player.dx = player.speed;
+      } else {
+        player.dx = 0;
+      }
+      player.x += player.dx;
+    }
+
+    // Tirer des projectiles
+    function shootBullet() {
+      if (keys.Space) {
+        bullets.push({ x: player.x + player.width / 2 - 5, y: player.y, width: 10, height: 20 });
+        keys.Space = false; // Empêcher plusieurs tirs en même temps
+      }
+    }
+
+    // Déplacer les projectiles
+    function moveBullets() {
+      for (let i = 0; i < bullets.length; i++) {
+        bullets[i].y -= bulletSpeed;
+        if (bullets[i].y < 0) {
+          bullets.splice(i, 1);
+          i--;
+        }
+      }
+    }
+
+    // Déplacer les ennemis
+    function moveEnemies() {
+      for (let i = 0; i < enemies.length; i++) {
+        enemies[i].y += enemies[i].speed;
+        if (enemies[i].y > canvas.height) {
+          enemies.splice(i, 1);
+          i--;
+        }
+      }
+    }
+
+    // Détecter les collisions entre projectiles et ennemis
+    function checkCollisions() {
+      for (let i = 0; i < bullets.length; i++) {
+        for (let j = 0; j < enemies.length; j++) {
+          if (
+            bullets[i].x < enemies[j].x + enemies[j].width &&
+            bullets[i].x + bullets[i].width > enemies[j].x &&
+            bullets[i].y < enemies[j].y + enemies[j].height &&
+            bullets[i].y + bullets[i].height > enemies[j].y
+          ) {
+            enemies.splice(j, 1);
+            bullets.splice(i, 1);
+            i--;
+            break;
+          }
+        }
+      }
+    }
+
+    // Dessiner le joueur
+    function drawPlayer() {
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    // Dessiner les projectiles
+    function drawBullets() {
+      ctx.fillStyle = 'red';
+      for (const bullet of bullets) {
+        ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+      }
+    }
+
+    // Dessiner les ennemis
+    function drawEnemies() {
+      ctx.fillStyle = 'green';
+      for (const enemy of enemies) {
+        ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+      }
+    }
+
+    // Boucle de jeu
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);  // Effacer le canvas
+
+      movePlayer();
+      shootBullet();
+      moveBullets();
+      moveEnemies();
+      checkCollisions();
+
+      drawPlayer();
+      drawBullets();
+      drawEnemies();
+
+      requestAnimationFrame(gameLoop);  // Répéter la boucle de jeu
+    }
+
+    // Créer des ennemis à intervalle régulier
+    setInterval(createEnemy, 2000);
+
+    // Démarrer le jeu
+    gameLoop();
+  </script>
+</body>
+</html>
