@@ -18,9 +18,27 @@
       border: 1px solid #000;
       background-color: #e0e0e0;
     }
+
+    /* Style pour la barre de vie */
+    #healthBar {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 200px;
+      height: 20px;
+      background-color: #ddd;
+      border: 2px solid #000;
+    }
+    #health {
+      height: 100%;
+      background-color: green;
+    }
   </style>
 </head>
 <body>
+  <div id="healthBar">
+    <div id="health"></div>
+  </div>
   <canvas id="gameCanvas" width="800" height="600"></canvas>
 
   <script>
@@ -34,7 +52,8 @@
       width: 50,
       height: 50,
       speed: 5,
-      dx: 0
+      dx: 0,
+      health: 100
     };
 
     // Variables des projectiles
@@ -51,6 +70,10 @@
       ArrowRight: false,
       Space: false
     };
+
+    // Sons
+    const shootSound = new Audio('https://www.soundjay.com/button/beep-07.wav');
+    const hitSound = new Audio('https://www.soundjay.com/button/beep-08b.wav');
 
     // Écouter les événements de clavier
     document.addEventListener('keydown', (e) => {
@@ -93,6 +116,7 @@
     function shootBullet() {
       if (keys.Space) {
         bullets.push({ x: player.x + player.width / 2 - 5, y: player.y, width: 10, height: 20 });
+        shootSound.play(); // Son du tir
         keys.Space = false; // Empêcher plusieurs tirs en même temps
       }
     }
@@ -114,6 +138,8 @@
         enemies[i].y += enemies[i].speed;
         if (enemies[i].y > canvas.height) {
           enemies.splice(i, 1);
+          player.health -= 10;  // Le joueur perd de la vie quand un ennemi dépasse l'écran
+          updateHealthBar();
           i--;
         }
       }
@@ -131,6 +157,7 @@
           ) {
             enemies.splice(j, 1);
             bullets.splice(i, 1);
+            hitSound.play(); // Son de collision
             i--;
             break;
           }
@@ -157,6 +184,17 @@
       ctx.fillStyle = 'green';
       for (const enemy of enemies) {
         ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+      }
+    }
+
+    // Dessiner la barre de vie
+    function updateHealthBar() {
+      const healthBar = document.getElementById('health');
+      healthBar.style.width = player.health + '%';
+      if (player.health <= 0) {
+        alert("Game Over!");
+        player.health = 100;  // Réinitialiser la vie du joueur
+        enemies.length = 0;  // Réinitialiser les ennemis
       }
     }
 
